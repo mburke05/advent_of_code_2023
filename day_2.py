@@ -1,3 +1,4 @@
+from functools import reduce
 import re
 
 
@@ -15,7 +16,6 @@ def is_valid_game(game: str, rules: dict()) -> int:
     Example game line:
     Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green -> id: 1, sequences: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
     """
-
     # first split the game to get an id and the sequences
     game_id, game_sequences = game.split(":")
     game_id = int(game_id.split()[1])
@@ -39,8 +39,46 @@ def is_valid_game(game: str, rules: dict()) -> int:
     return game_id
 
 
-valid_sum = 0
+def minimum_set_of_cubes(game: str) -> dict[str:int]:
+    """
+    Using same logic as above, parses a game sequence ( a string) and returns a dict of color:integers which represents the minimum number of cubes of each color required for that game to have taken place.
+    """
+
+    # first split the game to get an id and the sequences
+    game_id, game_sequences = game.split(":")
+    game_id = int(game_id.split()[1])
+
+    # now split the sequences by semi-colon
+    sequence = game_sequences.split(";")
+    max_cubes = {"red": 0, "green": 0, "blue": 0}
+
+    # check each sequence to see if it exceeds any of the rule values, if so return 0
+    for subsequence in sequence:
+        # make this into a dict of cubes by color of cube pulled and number of those cubes
+        cubes_pulled = subsequence.split(",")
+        for pull in cubes_pulled:
+            # extract integer using regex which represents the number of cubes pulled
+            num_cubes = int(re.findall(r"\d+", pull)[0].strip())
+            # then extract the color which is the text in the string
+            color = str(re.findall(r"[a-zA-Z]+", pull)[0].strip())
+            if num_cubes > max_cubes[color]:
+                max_cubes[color] = num_cubes
+
+    return max_cubes
+
+
+# valid_sum = 0
+# file = get_input_file()
+# for line in file:
+#     valid_sum += is_valid_game(line, {"red": 12, "green": 13, "blue": 14})
+# print(valid_sum)
+
+# now we want to find the minimum set of cubes required for a valid game--which is just the maximum value for each color in the game sequence
+minimum_set_of_cube_sum = 0
 file = get_input_file()
 for line in file:
-    valid_sum += is_valid_game(line, {"red": 12, "green": 13, "blue": 14})
-print(valid_sum)
+    # multiple each value of the minimum_set_of_cubes return value using prod reduce and add to the sum
+    minimum_set_of_cube_sum += reduce(
+        lambda x, y: x * y, minimum_set_of_cubes(line).values()
+    )
+print(minimum_set_of_cube_sum)
